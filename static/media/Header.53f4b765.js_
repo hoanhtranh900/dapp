@@ -1,0 +1,121 @@
+import React, {useState} from 'react'
+import { Col, Row, Typography, Space, Menu, Dropdown, Layout, Button } from 'antd';
+import './assets/css/index.css';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import Connect from "../../../assets/connect.svg";
+import { AuthButton, ModalError, SimpleButton } from "../../../components/Button/Button";
+import ModalConnect from "../../../components/ModalConnect/ModalConnect";
+import { YourRewardPage10 } from "../..";
+import { isMobile } from 'react-device-detect';
+import { useWeb3React } from "@web3-react/core";
+
+
+import {
+  useStoreApi,
+  getBalance,
+  getBNBBalance,
+  fetchAccountAllowance,
+} from "../../../services";
+import { useWeb3 } from "../../../services";
+const { Text } = Typography;
+const { Header } = Layout;
+
+const AppHeader = () => {
+  const [openModal, setOpenModal] = useState(false);
+
+  
+  const {
+    address,
+    balance,
+    setBalance,
+    setAddress,
+    setAllowance,
+    setEWB,
+    EWB,
+  } = useStoreApi();
+  const {
+    library,
+    chainId,
+    account,
+    activate,
+    deactivate,
+    active
+  } = useWeb3React();
+  const web3 = useWeb3();
+  const setUserAccount = async () => {
+    if (window.ethereum) {
+      if(account) {
+        console.log(account);
+        setAddress(account);
+        setUserBalanceBNB(account);
+        setUserBalanceEMB(account);
+        let allowance = await fetchAccountAllowance(account);
+        if (allowance < 1000000) {
+          setAllowance(false);
+        } else {
+          setAllowance(true);
+        }
+      };
+    }
+  };
+  const setUserBalanceBNB = async (fromAddress) => {
+    let balanceBNB = await getBNBBalance(fromAddress);
+    setBalance(balanceBNB);
+  };
+  const setUserBalanceEMB = async (fromAddress) => {
+    let balanceEMB = await getBalance(fromAddress);
+    setEWB(balanceEMB);
+  };
+  const handleOpenModal = () => {
+    setOpenModal(true);
+  };
+  const [reward, setReward] = useState(false);
+
+
+  return (
+    <div className="header" id='header-1' style={{zIndex:100}} >
+      <Row align='middle' justify='space-between'>
+        <Col >
+         
+        </Col>
+        <Col >
+          <Row justify='end' align='middle' style={{margin:"20px 40px"}}>
+                <Space size={25}>
+                <Text  onClick={() => setReward(true)} className='font-size-18 cursor-pointer top-menu' style={{cursor:"pointer"}}>
+                  MY REWARD
+                </Text>
+                 
+                 <div style={{backgroundImage:`url(${Connect})`, backgroundRepeat:"no-repeat", backgroundSize:"cover", width: "170px", height:"35px", display:"flex", justifyContent:"center"}}>
+                    
+                    <Button style={{alignSelf:"center", backgroundColor: "transparent", border: "none", color: "#fff"}} onClick={() => {
+                    handleOpenModal();
+                    if (account) {
+                      setUserAccount();
+                    }
+                  }}>
+                    {
+                    account
+                      ? `${account.substring(0, 4)}...${account.substring(
+                        account.length - 3,
+                        account.length
+                      )}`
+                      : "Connect wallet"
+                  }
+                   
+                    </Button>
+
+                 </div>
+                </Space>
+          </Row>
+        </Col>
+        {isMobile && <Col >
+         
+        </Col>}
+      </Row>
+      {openModal ? <ModalConnect setOpen={setOpenModal} /> : null}
+          {reward ? <YourRewardPage10 setOpen={setReward} /> : null}
+    </div>
+  )
+}
+
+export default AppHeader
